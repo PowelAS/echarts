@@ -223,6 +223,61 @@ var builders = {
     },
 
     /**
+     * Add a invisible rect to increase the mouse hit area around axis label
+     *
+     * @private
+     */
+    axisLabelHitArea: function () {
+        var axisModel = this.axisModel;
+        var axis = axisModel.axis;
+        var gridModel = axisModel.getCoordSysModel();
+        var triggerEvent = axisModel.get('triggerEvent');
+
+        if (!(triggerEvent && axis.isHorizontal())) {
+            return;
+        }
+
+        var ticks = axis.scale.getTicks();
+        var ticksCoords = axis.getTicksCoords();
+
+        var silent = isSilent(axisModel);
+        var gridRect = gridModel.coordinateSystem.getRect();
+        var HIT_AREA_HEIGHT = 30;
+        var prevX = axis.toGlobalCoord(ticksCoords[0]);
+
+        var ticksCnt = ticksCoords.length;
+        for (var i = 1; i < ticksCnt; i++) {
+            if (ifIgnoreOnTick(axis, i, this.opt.labelInterval, ticksCnt)) {
+                continue;
+            }
+
+            var x = prevX;
+            var y = gridRect.y + gridRect.height;
+            var width = axis.toGlobalCoord(ticksCoords[i]) - x;
+
+            var hitRect = new graphic.Rect({
+                shape: {
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: HIT_AREA_HEIGHT
+                },
+                invisible: true,
+                silent: silent,
+                z2: 15
+            });
+            // Pack data for mouse event
+            hitRect.eventData = makeAxisEventDataBase(axisModel);
+            hitRect.eventData.targetType = 'axisLabel';
+            hitRect.eventData.value = axis.scale.getLabel(ticks[i - 1]);
+
+            this.group.add(hitRect);
+
+            prevX = x + width;
+        }
+    },
+
+    /**
      * @private
      */
     axisName: function () {
@@ -662,7 +717,6 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     var categoryData = axisModel.getCategories();
 
     var labelEls = [];
-    var silent = isSilent(axisModel);
     var triggerEvent = axisModel.get('triggerEvent');
 
     var showMinLabel = axisModel.get('axisLabel.showMinLabel');
@@ -698,7 +752,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
             anid: 'label_' + tickVal,
             position: pos,
             rotation: labelLayout.rotation,
-            silent: silent,
+            silent: true,
             z2: 10
         });
 
@@ -723,13 +777,6 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
                 )
                 : textColor
         });
-
-        // Pack data for mouse event
-        if (triggerEvent) {
-            textEl.eventData = makeAxisEventDataBase(axisModel);
-            textEl.eventData.targetType = 'axisLabel';
-            textEl.eventData.value = labelStr;
-        }
 
         // FIXME
         axisBuilder._dumbGroup.add(textEl);

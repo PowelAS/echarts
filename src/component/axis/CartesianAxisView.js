@@ -8,7 +8,7 @@ var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 var getInterval = AxisBuilder.getInterval;
 
 var axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
+    'axisLine', 'axisTickLabel', 'axisLabelHitArea', 'axisName'
 ];
 var selfBuilderAttrs = [
     'splitArea', 'splitLine'
