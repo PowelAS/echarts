@@ -7,9 +7,9 @@ import * as formatUtil from '../../util/format';
 var each = zrUtil.each;
 var toCamelCase = formatUtil.toCamelCase;
 
-var vendors = ['', '-webkit-', '-moz-', '-o-'];
+var vendors = ['-webkit-', ''];
 
-var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
+var gCssText = 'position:absolute;top:0;left:0;display:block;border-style:solid;white-space:nowrap;z-index:9999;';
 
 /**
  * @param {number} duration
@@ -18,10 +18,10 @@ var gCssText = 'position:absolute;display:block;border-style:solid;white-space:n
  */
 function assembleTransition(duration) {
     var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    var transitionText = 'left ' + duration + 's ' + transitionCurve + ','
-                        + 'top ' + duration + 's ' + transitionCurve;
-    return zrUtil.map(vendors, function (vendorPrefix) {
-        return vendorPrefix + 'transition:' + transitionText;
+    var transitionText = 'transform ' + duration + 's ' + transitionCurve;
+
+    return vendors.map(function (vendorPrefix) {
+        return vendorPrefix + 'transition:' + vendorPrefix + transitionText;
     }).join(';');
 }
 
@@ -71,12 +71,12 @@ function assembleCssText(tooltipModel) {
 
     if (backgroundColor) {
         if (env.canvasSupported) {
-            cssText.push('background-Color:' + backgroundColor);
+            cssText.push('background-color:' + backgroundColor);
         }
         else {
             // for ie
             cssText.push(
-                'background-Color:#' + zrColor.toHex(backgroundColor)
+                'background-color:#' + zrColor.toHex(backgroundColor)
             );
             cssText.push('filter:alpha(opacity=70)');
         }
@@ -190,13 +190,19 @@ TooltipContent.prototype = {
     show: function (tooltipModel) {
         clearTimeout(this._hideTimeout);
         var el = this.el;
+        var style = el.style;
+        var x = this._x;
+        var y = this._y;
 
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
-            + ';left:' + this._x + 'px;top:' + this._y + 'px;'
+            + vendors.map(function (vendorPrefix) {
+                return vendorPrefix + 'transform:translate(' + x + 'px,' + y + 'px);';
+            }).join('')
             + (tooltipModel.get('extraCssText') || '');
 
-        el.style.display = el.innerHTML ?  'block' : 'none';
+        style.willChange = 'transform';
+        style.display = el.innerHTML ?  'block' : 'none';
 
         this._show = true;
     },
@@ -226,15 +232,18 @@ TooltipContent.prototype = {
         }
 
         var style = this.el.style;
-        style.left = x + 'px';
-        style.top = y + 'px';
+
+        style.webkitTransform = style.transform = 'translate(' + x + 'px,' + y + 'px)';
 
         this._x = x;
         this._y = y;
     },
 
     hide: function () {
-        this.el.style.display = 'none';
+        var style = this.el.style;
+        style.willChange = 'initial';
+        style.display = 'none';
+
         this._show = false;
     },
 
