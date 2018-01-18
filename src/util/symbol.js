@@ -279,21 +279,22 @@ var SymbolClz = graphic.extendShape({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(color, innerColor) {
+function symbolPathSetColor(color, innerColor, borderColor, shadowColor) {
     if (this.type !== 'image') {
         var symbolStyle = this.style;
         var symbolShape = this.shape;
         if (symbolShape && symbolShape.symbolType === 'line') {
-            symbolStyle.stroke = color;
+            symbolStyle.stroke = borderColor || color;
         }
         else if (this.__isEmptyBrush) {
-            symbolStyle.stroke = color;
+            symbolStyle.stroke = borderColor || color;
             symbolStyle.fill = innerColor || '#fff';
         }
         else {
             // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
             symbolStyle.fill && (symbolStyle.fill = color);
-            symbolStyle.stroke && (symbolStyle.stroke = color);
+            borderColor && (symbolStyle.stroke = borderColor);
+            shadowColor && (symbolStyle.shadowColor = shadowColor);
         }
         this.dirty(false);
     }
@@ -310,7 +311,7 @@ function symbolPathSetColor(color, innerColor) {
  * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
  *                            for path and image only.
  */
-export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
+export function createSymbol(symbolType, x, y, w, h, color, borderColor, keepAspect) {
     // TODO Support image object, DynamicImage.
 
     var isEmpty = symbolType.indexOf('empty') === 0;
@@ -350,7 +351,7 @@ export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
 
     symbolPath.setColor = symbolPathSetColor;
 
-    symbolPath.setColor(color);
+    symbolPath.setColor(color, null, borderColor);
 
     return symbolPath;
 }

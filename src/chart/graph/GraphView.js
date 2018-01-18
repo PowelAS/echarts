@@ -208,6 +208,8 @@ export default echarts.extendChartView({
             }
         });
 
+        lineDraw.group.silent = true;
+
         this._firstRender = false;
     },
 

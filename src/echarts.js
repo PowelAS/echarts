@@ -1092,18 +1092,12 @@ function updateStreamModes(ecIns, ecModel) {
 echartsProto.showLoading = function (name, cfg) {
     if (isObject(name)) {
         cfg = name;
-        name = '';
+        name = 'default';
     }
-    name = name || 'default';
 
     this.hideLoading();
-    if (!loadingEffects[name]) {
-        if (__DEV__) {
-            console.warn('Loading effects ' + name + ' not exists.');
-        }
-        return;
-    }
-    var el = loadingEffects[name](this._api, cfg);
+
+    var el = loadingDefault(this._api, cfg);
     var zr = this._zr;
     this._loadingFX = el;
 
@@ -1696,10 +1690,6 @@ var visualFuncs = [];
  * @type {Object.<key, Object>}
  */
 var themeStorage = {};
-/**
- * Loading effects
- */
-var loadingEffects = {};
 
 var instances = {};
 var connectedGroups = {};
@@ -2021,13 +2011,6 @@ function normalizeRegister(targetList, priority, fn, defaultPriority, visualType
 }
 
 /**
- * @param {string} name
- */
-export function registerLoading(name, loadingFx) {
-    loadingEffects[name] = loadingFx;
-}
-
-/**
  * @param {Object} opts
  * @param {string} [superClass]
  */
@@ -2141,7 +2124,6 @@ export function getMap(mapName) {
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
-registerLoading('default', loadingDefault);
 
 // Default actions
 

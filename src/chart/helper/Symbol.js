@@ -44,6 +44,7 @@ symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
     this.removeAll();
 
     var color = data.getItemVisual(idx, 'color');
+    var borderColor = data.getItemVisual(idx, 'borderColor');
 
     // var symbolPath = createSymbol(
     //     symbolType, -0.5, -0.5, 1, 1, color
@@ -52,7 +53,7 @@ symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
     // and macOS Sierra, a circle stroke become a rect, no matter what
     // the scale is set. So we set width/height as 2. See #4150.
     var symbolPath = createSymbol(
-        symbolType, -1, -1, 2, 2, color
+        symbolType, -1, -1, 2, 2, color, borderColor
     );
 
     symbolPath.attr({
@@ -197,6 +198,8 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     var symbolPath = this.childAt(0);
     var seriesModel = data.hostModel;
     var color = data.getItemVisual(idx, 'color');
+    var borderColor = data.getItemVisual(idx, 'borderColor');
+    var shadowColor = data.getItemVisual(idx, 'shadowColor');
 
     // Reset style
     if (symbolPath.type !== 'image') {
@@ -220,7 +223,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
         // Color must be excluded.
         // Because symbol provide setColor individually to set fill and stroke
-        itemStyle = itemModel.getModel(normalStyleAccessPath).getItemStyle(['color']);
+        itemStyle = itemModel.getModel(normalStyleAccessPath).getItemStyle(['color', 'borderColor', 'shadowColor']);
         hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
         symbolRotate = itemModel.getShallow('symbolRotate');
@@ -233,6 +236,13 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
     else {
         hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
+    }
+
+    if (
+        hoverItemStyle.hasOwnProperty('shadowColor') &&
+        typeof hoverItemStyle.shadowColor === 'function'
+    ) {
+        hoverItemStyle.shadowColor = hoverItemStyle.shadowColor(seriesModel.getDataParams(idx));
     }
 
     var elStyle = symbolPath.style;
@@ -249,7 +259,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
     // PENDING setColor before setStyle!!!
-    symbolPath.setColor(color, seriesScope && seriesScope.symbolInnerColor);
+    symbolPath.setColor(color, seriesScope && seriesScope.symbolInnerColor, borderColor, shadowColor);
 
     symbolPath.setStyle(itemStyle);
 

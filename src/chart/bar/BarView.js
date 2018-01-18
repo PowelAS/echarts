@@ -238,8 +238,17 @@ function updateStyle(
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
+    var borderColor = data.getItemVisual(dataIndex, 'borderColor');
+    var shadowColor = data.getItemVisual(dataIndex, 'shadowColor');
     var itemStyleModel = itemModel.getModel('itemStyle');
     var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
+
+    if (
+        hoverStyle.hasOwnProperty('shadowColor') &&
+        typeof hoverStyle.shadowColor === 'function'
+    ) {
+        hoverStyle.shadowColor = hoverStyle.shadowColor(seriesModel.getDataParams(dataIndex));
+    }
 
     if (!isPolar) {
         el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
@@ -248,6 +257,8 @@ function updateStyle(
     el.useStyle(zrUtil.defaults(
         {
             fill: color,
+            stroke: borderColor,
+            shadowColor: shadowColor,
             opacity: opacity
         },
         itemStyleModel.getBarItemStyle()

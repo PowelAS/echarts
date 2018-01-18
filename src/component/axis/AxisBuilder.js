@@ -196,6 +196,7 @@ var builders = {
                         symbolWidth,
                         symbolHeight,
                         lineStyle.stroke,
+                        null,
                         true
                     );
                     symbol.attr({
